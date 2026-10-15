@@ -41,3 +41,6 @@ The build uses a relative Vite base (`./`) to support GitHub Pages project subpa
 - Abstract illustrated project artwork is decorative, not a photo of the actual projects.
 - Supports keyboard-accessible project dialogs, mobile menu, email copy, and reduced-motion settings.
 - The project-detail modal includes Escape and backdrop dismissal; when extending the dialog, consider adding a focus-trap library for strict modal focus management.
+
+## Profile photo
+The hero portrait uses the existing `dp.jpg` from `https://github.com/dipeshpokharel/portfolio_website` via its raw GitHub URL. To make it more robust, copy `dp.jpg` to this project's `public/dp.jpg` and replace the image URL in `src/App.tsx` with `{`${import.meta.env.BASE_URL}dp.jpg`}`.
