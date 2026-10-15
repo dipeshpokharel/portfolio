@@ -1,0 +1,75 @@
+import { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight, ArrowRight, ArrowDown, ChevronRight, Menu, X, Mail, Linkedin, MapPin, Download, MoveUpRight, Check, Compass, Plus } from 'lucide-react';
+import { education, experience, profile, projects, Project, skillGroups } from './data';
+
+function useReveal() {
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); }
+    }), {threshold: .09, rootMargin: '0px 0px -35px 0px'});
+    document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+}
+
+function TerrainCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas=ref.current; if(!canvas) return;
+    const ctx=canvas.getContext('2d'); if(!ctx) return;
+    let raf=0, width=0, height=0, frame=0;
+    let pointer={x:.5,y:.5};
+    const motion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const resize=()=>{cancelAnimationFrame(raf); const rect=canvas.getBoundingClientRect(); const ratio=Math.min(devicePixelRatio||1,2); width=rect.width;height=rect.height;canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);draw(); };
+    const onMove=(event:PointerEvent)=>{const rect=canvas.getBoundingClientRect();pointer={x:(event.clientX-rect.left)/rect.width,y:(event.clientY-rect.top)/rect.height};};
+    const draw=()=>{
+      ctx.clearRect(0,0,width,height);
+      const gap=Math.max(11,Math.min(20,width/58));
+      const centerX=width*.53, centerY=height*.48;
+      ctx.lineWidth=.8;
+      for(let j=-25;j<=25;j++) {
+        ctx.beginPath();
+        for(let i=0;i<=90;i++) {
+          const x=i/90*width;
+          const y=height*.20+j*gap;
+          const dx=(x-centerX)/width, dy=(y-centerY)/height;
+          const hill=Math.exp(-((dx+.10)**2*22+(dy-.03)**2*14))*95;
+          const hill2=Math.exp(-((dx-.24)**2*50+(dy+.16)**2*25))*65;
+          const wave=12*Math.sin(x*.012+j*.23+frame*.007)*Math.exp(-Math.abs(dy)*2);
+          const shift=(pointer.x-.5)*12*Math.exp(-Math.abs(dx)*2);
+          const py=y-hill-hill2+wave+shift;
+          if(i===0)ctx.moveTo(x,py); else ctx.lineTo(x,py);
+        }
+        ctx.strokeStyle=j%4===0?'rgba(147,227,200,.31)':'rgba(147,227,200,.12)';ctx.stroke();
+      }
+      for(let i=0;i<57;i++){
+        const x=(i*113.7)%width,y=(i*67.3)%height;
+        ctx.fillStyle='rgba(171,255,211,.35)';ctx.fillRect(x,y,1.5,1.5);
+      }
+      if(!motion){frame++;raf=requestAnimationFrame(draw);}
+    };
+    const observer=new ResizeObserver(resize);observer.observe(canvas);
+    canvas.addEventListener('pointermove',onMove);
+    resize();
+    return ()=>{cancelAnimationFrame(raf);observer.disconnect();canvas.removeEventListener('pointermove',onMove);};
+  },[]);
+  return <canvas className="terrain-canvas" ref={ref} aria-hidden="true"/>;
+}
+
+function Brand(){return <a href="#home" className="brand" aria-label="Dipesh Pokharel, back to top"><span className="brand-mark"><Compass size={21} strokeWidth={1.5}/></span><span>DIPESH<span className="brand-muted"> / </span>POKHAREL</span></a>}
+function SectionIntro({eyebrow,title,lead}: {eyebrow:string;title:string;lead?:string}) {return <div className="section-intro reveal"><div className="eyebrow"><span className="eyebrow-line"/>{eyebrow}</div><h2>{title}</h2>{lead&&<p>{lead}</p>}</div>}
+function Visual({type}: {type:Project['visual']}) {return <div className={`project-art art-${type}`} aria-hidden="true"><div className="art-orbit orbit-one"/><div className="art-orbit orbit-two"/><div className="art-center"/><div className="art-latitude"/><div className="art-noise"/><span className="art-label">{type==='terrain'?'SLOPE / MODEL 05':type==='wave'?'WARNING / DATA 01':type==='grid'?'FIELD / SIGNAL 03':type==='rain'?'PRECIPITATION / 04':type==='school'?'STRUCTURE / 05':'SPATIAL / DATA 06'}</span></div>}
+function Header(){const [open,setOpen]=useState(false);const [scrolled,setScrolled]=useState(false);useEffect(()=>{const update=()=>setScrolled(scrollY>28);update();window.addEventListener('scroll',update,{passive:true});return()=>window.removeEventListener('scroll',update)},[]);useEffect(()=>{document.body.style.overflow=open?'hidden':'';return()=>{document.body.style.overflow=''}},[open]);return <header className={`header ${scrolled?'scrolled':''}`}><div className="container nav-inner"><Brand/><nav className="nav-desktop" aria-label="Main navigation"><a href="#about">About</a><a href="#work">Selected work</a><a href="#experience">Experience</a><a href="#expertise">Expertise</a></nav><div className="nav-actions"><a className="nav-contact" href="#contact">Let's connect <ArrowUpRight size={15}/></a><button className="menu-button" onClick={()=>setOpen(!open)} aria-label={open?'Close menu':'Open menu'} aria-expanded={open}>{open?<X/>:<Menu/>}</button></div></div>{open&&<nav className="mobile-panel" aria-label="Mobile navigation">{[['About','#about'],['Work','#work'],['Experience','#experience'],['Expertise','#expertise'],['Education','#education'],['Contact','#contact']].map(([label,link],i)=><a key={label} style={{animationDelay:`${i*45}ms`}} href={link} onClick={()=>setOpen(false)}>{label}<ArrowUpRight/></a>)}</nav>}</header>}
+function ProjectModal({project,onClose}:{project:Project;onClose:()=>void}) {useEffect(()=>{const close=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose()};document.addEventListener('keydown',close);const before=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.removeEventListener('keydown',close);document.body.style.overflow=before}},[onClose]);const ref=useRef<HTMLButtonElement>(null);useEffect(()=>ref.current?.focus(),[]);return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button ref={ref} className="modal-close" onClick={onClose} aria-label="Close project details"><X size={22}/></button><div className="modal-image"><Visual type={project.visual}/></div><div className="modal-body"><span className="label-caps">PROJECT {project.number} / {project.category}</span><h2 id="modal-title">{project.title}</h2><div className="modal-meta">{project.place} <span>·</span> {project.year}</div><p className="modal-summary">{project.description}</p><div className="modal-divider"/><h3>Work & contributions</h3><ul>{project.details.map(d=><li key={d}><ChevronRight size={16}/>{d}</li>)}</ul><div className="tags">{project.tags.map(t=><span key={t}>{t}</span>)}</div></div></div></div>}
+function App(){useReveal();const [selected,setSelected]=useState<Project|null>(null);const [all,setAll]=useState(false);const [copied,setCopied]=useState(false);const shown=all?projects:projects.slice(0,4);const copy=async()=>{try{await navigator.clipboard.writeText(profile.email);setCopied(true);window.setTimeout(()=>setCopied(false),2200)}catch{window.location.href=`mailto:${profile.email}`}};return <>
+<a className="skip-link" href="#main">Skip to content</a><Header/><main id="main">
+<section className="hero" id="home"><div className="hero-ambient"/><TerrainCanvas/><div className="hero-gradient"/><div className="container hero-inner"><div className="hero-kicker"><span className="status-dot"/> WORKING AT THE INTERSECTION OF SCIENCE & RESILIENCE</div><p className="hero-prefix">Hello, I'm Dipesh Pokharel.</p><h1><span>Mapping risk.</span><span className="hero-serif">Building <em>resilience.</em></span></h1><p className="hero-sub">Disaster risk management specialist, geospatial researcher & civil engineer turning complex risk data into informed action.</p><div className="hero-cta"><a className="btn btn-primary" href="#work">Explore my work <ArrowUpRight size={19}/></a><a className="btn btn-ghost" href="./Dipesh-Pokharel-Resume.docx" download>Download resume <Download size={17}/></a></div></div><div className="container hero-bottom"><div className="coordinates"><MapPin size={14}/> KATHMANDU, NEPAL <span> / </span> 27.7172° N · 85.3240° E</div><a href="#about" className="scroll-hint">SCROLL TO EXPLORE <ArrowDown size={15}/></a><span className="hero-index">01 / 06</span></div></section>
+<div className="ticker" aria-hidden="true"><div className="ticker-track">{Array.from({length:4},(_,i)=><span key={i}>DISASTER RISK <span className="ticker-star">✳</span> GEOSPATIAL INTELLIGENCE <span className="ticker-star">✳</span> EARLY WARNING SYSTEMS <span className="ticker-star">✳</span> RESILIENT COMMUNITIES <span className="ticker-star">✳</span></span>)}</div></div>
+<section className="section about" id="about"><div className="container about-layout"><SectionIntro eyebrow="01 / THE PERSPECTIVE" title="Understanding risk.\nEnabling resilience."/><div className="about-right reveal"><p className="about-lead">I work where <em>earth systems, data,</em> and human decisions meet.</p><p>With a background in civil engineering and a master's in Disaster Risk Management, my work connects geospatial analysis, hazard intelligence, early warning systems, and community resilience.</p><p>From landslide susceptibility modelling in Bhotekoshi to multi-hazard early warning in Melamchi, I focus on making complex information practical for the people and institutions who need it.</p><a className="text-link" href="#experience">Explore my journey <ArrowUpRight size={17}/></a></div></div><div className="container metrics reveal"><div><b>34</b><span>SCHOOLS TRAINED IN<br/>RETROFITTING & MAINTENANCE</span></div><div><b>05</b><span>ML MODELS COMPARED FOR<br/>LANDSLIDE SUSCEPTIBILITY</span></div><div><b>07+</b><span>YEARS ACROSS ENGINEERING<br/>& DISASTER RISK WORK*</span></div><p className="metrics-note">*Calculated from the career history in the uploaded resume, beginning in December 2018.</p></div></section>
+<section className="section projects-section" id="work"><div className="container"><div className="work-heading"><SectionIntro eyebrow="02 / FIELD NOTES" title="Selected work." lead="A collection of projects where research, technology, and real-world challenges intersect."/><span className="work-count">SELECTED PROJECTS / {String(shown.length).padStart(2,'0')}</span></div><div className="projects-grid">{shown.map((project,i)=><button onClick={()=>setSelected(project)} key={project.id} className={`project-card reveal project-${i%2}`} aria-label={`View details for ${project.title}`}><div className="project-image"><Visual type={project.visual}/><span className="project-view"><ArrowUpRight size={23}/></span></div><div className="project-caption"><div><span className="label-caps">{project.number} / {project.category}</span><h3>{project.title}</h3><p>{project.description}</p></div><ArrowUpRight className="project-arrow"/></div><div className="project-tags">{project.tags.slice(0,2).join('  /  ')} <span>{project.year}</span></div></button>)}</div><div className="more-projects reveal"><button className="btn btn-outline" onClick={()=>setAll(!all)}>{all?'Show selected projects':'Explore all projects'} {all?<ArrowRight size={18}/>:<Plus size={18}/>}</button></div></div></section>
+<section className="section experience-section" id="experience"><div className="container experience-layout"><div className="experience-sticky"><SectionIntro eyebrow="03 / THE JOURNEY" title="Where I've\nmade an impact." lead="From infrastructure reconstruction to geospatial research and multi-hazard early warning."/><div className="experience-decor"><span>THE JOURNEY CONTINUES</span><ArrowDown size={19}/></div></div><div className="timeline">{experience.map((item,i)=><div className="timeline-item reveal" key={item.title+item.organization}><div className="timeline-line"><span/></div><div className="timeline-content"><span className="timeline-date">{item.date}</span><h3>{item.title}</h3><p className="timeline-org">{item.organization}</p><p className="timeline-desc">{item.note}</p></div><span className="timeline-count">{String(i+1).padStart(2,'0')}</span></div>)}</div></div></section>
+<section className="section expertise-section" id="expertise"><div className="container"><SectionIntro eyebrow="04 / THE TOOLKIT" title="Connecting the dots." lead="An interdisciplinary toolkit for understanding hazards and translating evidence into action."/><div className="expertise-grid">{skillGroups.map((group,i)=><div className="skill-group reveal" key={group.title}><div className="skill-icon">{i===0?'↗':i===1?'◎':'⌘'}</div><span className="label-caps">DISCIPLINE / 0{i+1}</span><h3>{group.title}</h3><div className="skill-list">{group.items.map(skill=><span key={skill}>{skill}</span>)}</div></div>)}</div></div></section>
+<section className="section education-section" id="education"><div className="container education-layout"><div><SectionIntro eyebrow="05 / FOUNDATIONS" title="Built on\ncuriosity." lead="A foundation in engineering, deepened by a focus on risk, systems, and resilience."/><div className="research-callout reveal"><span className="label-caps">PUBLISHED RESEARCH</span><p>A Study of Random Forest and Support Vector Machine Algorithms for Landslide Susceptibility Mapping at Bhotekoshi Rural Municipality</p><span>Published in IOE_GC · as listed in resume</span></div></div><div className="education-list">{education.map((item,i)=><div key={item.degree} className="education-item reveal"><div className="education-top"><span>0{i+1} / ACADEMIC</span><span>{item.year}</span></div><h3>{item.degree}</h3><p>{item.institution}</p><span className="education-score">{item.score}</span></div>)}</div></div></section>
+<section className="contact-section" id="contact"><div className="container contact-inner"><div className="eyebrow reveal"><span className="eyebrow-line"/>06 / WHAT'S NEXT</div><p className="contact-prompt reveal">Have a challenge worth solving?</p><a className="contact-large reveal" href={`mailto:${profile.email}`}>Let's connect<span><MoveUpRight/></span></a><div className="contact-details reveal"><div><span className="label-caps">DROP A LINE</span><button className="copy-mail" onClick={copy}>{profile.email} {copied?<Check size={17}/>:<Mail size={17}/>}</button>{copied&&<span className="copy-confirm" role="status">Copied to clipboard</span>}</div><div><span className="label-caps">FIND ME ONLINE</span><a href={profile.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn <Linkedin size={16}/></a></div><div><span className="label-caps">BASED IN</span><span className="location-text">Kathmandu, Nepal <MapPin size={16}/></span></div></div></div></section>
+</main><footer className="footer"><div className="container footer-inner"><Brand/><span>© {new Date().getFullYear()} DIPESH POKHAREL. ALL RIGHTS RESERVED.</span><a href="#home">BACK TO TOP ↑</a></div></footer>{selected&&<ProjectModal project={selected} onClose={()=>setSelected(null)}/>}</>}
+export default App;
