@@ -1,46 +1,15 @@
-# Dipesh Pokharel — Professional Portfolio
+# Dipesh Pokharel — Portfolio
 
-A responsive, animated portfolio for Dipesh Pokharel, highlighting disaster risk management, geospatial research, multi-hazard early warning, civil engineering and selected research/projects.
+This is a dependency-free static website. Open `index.html` directly or preview the repository root with `python -m http.server 8000`, then visit `http://localhost:8000`.
 
-## Run locally
+## Updating portfolio content
 
-```bash
-npm install
-npm run dev
-```
+- Edit experience, projects, skills and education in `js/portfolio-data.js`.
+- Update the introduction, selected contributions and contact details in `index.html`.
+- Replace `dp.jpg` to change the portrait; keep its filename or update the image references in `index.html`.
+- Replace `Dipesh Pokharel_Resume.docx` to update the downloadable résumé; keep the filename or update both résumé links.
+- Update the canonical URL, social preview URL, JSON-LD, sitemap and `CNAME` together if the public domain changes.
 
-Visit the URL printed by Vite (typically `http://localhost:5173`).
+## Deployment
 
-## Build
-
-```bash
-npm run build
-npm run preview
-```
-
-The production website is in `dist/`.
-
-## Edit content
-
-- `src/data.ts` contains the identity, projects, professional experience, skills, and education.
-- `src/App.tsx` contains the layout, interactive project details, animations, and contact features.
-- `src/styles.css` contains all design tokens, visual effects, and responsive styling.
-- `public/Dipesh-Pokharel-Resume.docx` is the downloadable resume. Replace it with a newer version of the same filename when updated.
-
-### Add an existing GitHub profile photo
-
-The uploaded resume did not contain a portrait, and the user's existing GitHub repository was not accessible in this chat. This design intentionally uses a generative topographic hero instead of inventing a portrait. Once the actual photo is available, place it at `public/profile.jpg` and incorporate an `<img>` into the hero composition, with meaningful alt text.
-
-### Deployment
-
-The build uses a relative Vite base (`./`) to support GitHub Pages project subpaths and regular static hosting. You can upload `dist/` to any static host (GitHub Pages, Vercel, Netlify, etc.). For GitHub Pages, a GitHub Actions workflow is included at `.github/workflows/deploy.yml`; enable **GitHub Actions** as the Pages source under Settings → Pages.
-
-### Notes
-
-- All displayed accomplishments derive from the supplied resume. This project does not claim to be connected to or deployed to the user's GitHub repository.
-- Abstract illustrated project artwork is decorative, not a photo of the actual projects.
-- Supports keyboard-accessible project dialogs, mobile menu, email copy, and reduced-motion settings.
-- The project-detail modal includes Escape and backdrop dismissal; when extending the dialog, consider adding a focus-trap library for strict modal focus management.
-
-## Profile photo
-The hero portrait uses the existing `dp.jpg` from `https://github.com/dipeshpokharel/portfolio_website` via its raw GitHub URL. To make it more robust, copy `dp.jpg` to this project's `public/dp.jpg` and replace the image URL in `src/App.tsx` with `{`${import.meta.env.BASE_URL}dp.jpg`}`.
+The site is served from the repository root and needs no build step. `CNAME` records the existing custom domain. No hosting workflow or provider configuration is included in this repository, so confirm the configured static host publishes the repository root and preserves that domain before deploying.
